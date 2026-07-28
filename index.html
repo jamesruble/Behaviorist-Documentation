@@ -1322,7 +1322,7 @@ async function embedSignatureImages(zip,records){
 }
 
 function setXmlCell(xml,ref,value,formula=''){
-  const re=new RegExp(`<c r="${ref}"[^>]*>[\s\S]*?<\/c>|<c r="${ref}"[^>]*/>`);
+  const re=new RegExp(`<c r="${ref}"[^>]*>[\\s\\S]*?<\\/c>|<c r="${ref}"[^>]*/>`);
   const match=xml.match(re); const style=match?.[0].match(/ s="(\d+)"/)?.[1]||'';
   return xml.replace(re,cell(ref,value,style,formula));
 }
