@@ -45,6 +45,13 @@ header h1{margin:0;font-size:28px}
   .pm.plus{background:var(--green)}
   .pm.minus{background:var(--yellow)}
   .pm.null{background:var(--gray)}
+  .pm-group{display:flex;justify-content:center;gap:5px;min-width:132px}
+  .pm-choice{width:38px;min-height:38px;padding:0;border:2px solid #b8c4d4;border-radius:8px;background:#fff;color:var(--navy);font-size:18px;font-weight:900;line-height:1;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .pm-choice:hover{border-color:var(--navy);background:#f2f6fb}
+  .pm-choice:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}
+  .pm-choice.plus.active{background:var(--green);border-color:#4f9b65;color:#174f2b}
+  .pm-choice.minus.active{background:var(--yellow);border-color:#c69725;color:#634600}
+  .pm-choice.null.active{background:var(--gray);border-color:#7b8794;color:#273444}
   .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
   .metric{background:var(--blue);border-radius:10px;padding:12px}
   .metric b{display:block;font-size:25px;color:var(--navy)}
@@ -539,17 +546,28 @@ function renderTable(){
       <td>${r.label}</td>
       <td><input data-frequency-input type="number" min="0" max="99" value="${r.agg}" aria-label="Aggression ${r.label}" oninput="setValue(${i},'agg',this.value)"><span class="frequency-not-collected">Daily total used</span></td>
       <td><input data-frequency-input type="number" min="0" max="99" value="${r.sib}" aria-label="SIB ${r.label}" oninput="setValue(${i},'sib',this.value)"><span class="frequency-not-collected">Daily total used</span></td>
-      <td><select class="pm ${pmClass(r.scream)}" aria-label="Screaming ${r.label}" onchange="setValue(${i},'scream',this.value);this.className='pm '+pmClass(this.value)">
-        <option value="" ${r.scream===''?'selected':''}></option>
-        <option value="+" ${r.scream==='+'?'selected':''}>+</option>
-        <option value="-" ${r.scream==='-'?'selected':''}>-</option>
-        <option value="Ø" ${r.scream==='Ø'?'selected':''}>Ø</option>
-      </select></td>
+      <td><div class="pm-group" role="group" aria-label="Screaming ${r.label}">
+        <button type="button" class="pm-choice plus ${r.scream==='+'?'active':''}" aria-label="Observed during ${r.label}" aria-pressed="${r.scream==='+'}" data-value="+" onclick="setScreamValue(${i},'+',this)">+</button>
+        <button type="button" class="pm-choice minus ${r.scream==='-'?'active':''}" aria-label="Not observed during ${r.label}" aria-pressed="${r.scream==='-'}" data-value="-" onclick="setScreamValue(${i},'-',this)">−</button>
+        <button type="button" class="pm-choice null ${r.scream==='Ø'?'active':''}" aria-label="No data during ${r.label}" aria-pressed="${r.scream==='Ø'}" data-value="Ø" onclick="setScreamValue(${i},'Ø',this)">Ø</button>
+      </div></td>
       <td><input style="width:100%" value="${escapeHtml(r.note)}" aria-label="Note ${r.label}" oninput="setValue(${i},'note',this.value)"></td>`;
     tbody.appendChild(tr);
   });
 }
 function pmClass(v){return v==='+'?'plus':v==='-'?'minus':v==='Ø'?'null':''}
+function setScreamValue(i,value,button){
+  const next=state.rows[i].scream===value?'':value;
+  state.rows[i].scream=next;
+  const group=button.closest('.pm-group');
+  group.querySelectorAll('.pm-choice').forEach(choice=>{
+    const active=choice.dataset.value===next;
+    choice.classList.toggle('active',active);
+    choice.setAttribute('aria-pressed',String(active));
+  });
+  updateSummary();
+  drawChart();
+}
 function setValue(i,key,value){
   state.rows[i][key]=value;
   updateSummary();
